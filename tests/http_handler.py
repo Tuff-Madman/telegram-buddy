@@ -50,10 +50,7 @@ def use_local(client: Steamship, package_class, context: Optional[InvocationCont
         new_kwargs = handle_kwargs(kwargs)
         print(f"Patched invocation of self.invoke('{path}', {kwargs})")
         res = fn(**new_kwargs)
-        if hasattr(res, 'dict'):
-            return getattr(res, 'dict')()
-        # TODO: Handle if they returned a InvocationResponse object
-        return res
+        return getattr(res, 'dict')() if hasattr(res, 'dict') else res
 
     def invoke_later(self, path: str, verb: Verb = Verb.POST, **kwargs):
         # Note: the correct impl would inspect the fn lookup for the fn with the right verb.
@@ -130,12 +127,12 @@ def internal_handler(  # noqa: C901
             )
 
     try:
-        print(f"Running __instance_init__:")
+        print("Running __instance_init__:")
         invocable = use_local(client, invocable_cls_func(), context=invocation_context, config=request.invocation.config)
         invocable.instance_init()
-        # invocable = invocable_cls_func()(
-        #     client=client, config=request.invocation.config, context=invocation_context
-        # )
+            # invocable = invocable_cls_func()(
+            #     client=client, config=request.invocation.config, context=invocation_context
+            # )
     except SteamshipError as se:
         logging.exception(se)
         return InvocableResponse.from_obj(se)
@@ -239,9 +236,6 @@ def handler(bound_internal_handler, event: Dict, _: Dict = None) -> dict:  # noq
         logging_handler.setFormatter(formatter)
         # The below should make it so calls to logging.info etc are also routed to the remote logger
         logging.root.addHandler(logging_handler)
-    else:
-        pass
-
     try:
         # Config will accept `workspace_id` as passed from the Steamship Engine, whereas the `Steamship`
         # class itself is limited to accepting `workspace` (`config.workspace_handle`) since that is the manner
