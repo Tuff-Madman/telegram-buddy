@@ -10,6 +10,9 @@ from socketserver import TCPServer
 from http_handler import create_safe_handler
 
 def make_handler(invocable: Invocable, client: Steamship, context: InvocationContext, config: dict = {}):
+
+
+
     class LocalHttpHandler(server.SimpleHTTPRequestHandler):
         def _set_response(self):
             self.send_response(200)
@@ -19,7 +22,7 @@ def make_handler(invocable: Invocable, client: Steamship, context: InvocationCon
         def do_GET(self):
             logging.info("GET request,\nPath: %s\nHeaders:\n%s\n", str(self.path), str(self.headers))
             self._set_response()
-            self.wfile.write("GET request for {}".format(self.path).encode('utf-8'))
+            self.wfile.write(f"GET request for {self.path}".encode('utf-8'))
 
         def do_POST(self):
             content_length = int(self.headers['Content-Length']) # <--- Gets the size of data
@@ -49,11 +52,12 @@ def make_handler(invocable: Invocable, client: Steamship, context: InvocationCon
                 logging.info("POST request,\nPath: %s\nHeaders:\n%s\n\nBody:\n%s\n",
                         str(self.path), str(self.headers), post_data.decode('utf-8'))
                 self._set_response()
-                self.wfile.write("POST request for {}".format(self.path).encode('utf-8'))
+                self.wfile.write(f"POST request for {self.path}".encode('utf-8'))
             except Exception as e:
                 print(e)
                 self._set_response()
-                self.wfile.write("POST request for {}".format(self.path).encode('utf-8'))
+                self.wfile.write(f"POST request for {self.path}".encode('utf-8'))
+
 
     return LocalHttpHandler
 
@@ -64,9 +68,9 @@ def use_local_with_ngrok(client: Steamship, package_class, config: Optional[dict
     http_tunnel = ngrok.connect(port, bind_tls=True)
 
     public_url = http_tunnel.public_url
-    print(f"🚢 Development Hosting 🚢")
+    print("🚢 Development Hosting 🚢")
     print(f"URL: {public_url}")
-    print(f"Client Auth: Hardcoded")
+    print("Client Auth: Hardcoded")
 
     # We need to trigger the instance init.
     context = InvocationContext(
@@ -92,7 +96,7 @@ def use_local_with_ngrok(client: Steamship, package_class, config: Optional[dict
     resp = handler(event.dict(by_alias=True), context)
 
 
-    print(f"Now serving..")
+    print("Now serving..")
     httpd.serve_forever()
 
 

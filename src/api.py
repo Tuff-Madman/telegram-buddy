@@ -34,11 +34,9 @@ class TelegramBuddy(PackageService):
         self.gpt4 = None
 
     def get_gpt4(self) -> PluginInstance:
-        if self.gpt4 is not None:
-            return self.gpt4
-        else:
+        if self.gpt4 is None:
             self.gpt4 = self.client.use_plugin("gpt-4", config={"model": self.model, "temperature": 0.8})
-            return self.gpt4
+        return self.gpt4
 
     @classmethod
     def config_cls(cls) -> Type[Config]:
@@ -47,7 +45,7 @@ class TelegramBuddy(PackageService):
 
     def instance_init(self):
         """This instance init method is called automatically when an instance of this package is created. It registers the URL of the instance as the Telegram webhook for messages."""
-        webhook_url = self.context.invocable_url + 'respond'
+        webhook_url = f'{self.context.invocable_url}respond'
         response = requests.get(f'{self.api_root}/setWebhook', params={"url": webhook_url, "allowed_updates": ['message']})
         if not response.ok:
             raise SteamshipError(f"Could not set webhook for bot. Webhook URL was {webhook_url}. Telegram response message: {response.text}")
@@ -101,7 +99,7 @@ class TelegramBuddy(PackageService):
     @post("info")
     def info(self) -> dict:
         """Endpoint returning information about this bot."""
-        resp = requests.get(self.api_root+'/getMe').json()
+        resp = requests.get(f'{self.api_root}/getMe').json()
         logging.info(f"/info: {resp}")
         return {"telegram": resp.get("result")}
 
@@ -158,9 +156,7 @@ class TelegramBuddy(PackageService):
         reply_params = {'chat_id': chat_id,
                         'text': text,
                         }
-        requests.get(
-            self.api_root+'/sendMessage',
-            params=reply_params)
+        requests.get(f'{self.api_root}/sendMessage', params=reply_params)
 
     def max_tokens_for_model(self) -> int:
         if self.config.use_gpt4:
